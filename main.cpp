@@ -15,7 +15,7 @@ typedef struct Grid
         for (int i = 0; i < GRID_SIZE; ++i)
         {
             cells[i].x = (i % GRID_LEN) * CELL_WIDTH + (WINDOW_WIDTH - GRID_LEN * CELL_WIDTH) * 0.5;
-            cells[i].y = ((float)i / GRID_LEN) * CELL_WIDTH + (WINDOW_HEIGHT - GRID_LEN * CELL_WIDTH + TOP_REGION_HEIGHT) * 0.5;
+            cells[i].y = ((int)(i / GRID_LEN)) * CELL_WIDTH + (WINDOW_HEIGHT - GRID_LEN * CELL_WIDTH + TOP_REGION_HEIGHT) * 0.5;
 
             cells[i].width = CELL_WIDTH;
             cells[i].height = CELL_WIDTH;
@@ -40,7 +40,7 @@ void reset(Grid &grid)
     for (int i = 0; i < GRID_SIZE; ++i)
     {
         grid.cells[i].x = (i % GRID_LEN) * CELL_WIDTH + (WINDOW_WIDTH - GRID_LEN * CELL_WIDTH) * 0.5;
-        grid.cells[i].y = ((float)i / GRID_LEN) * CELL_WIDTH + (WINDOW_HEIGHT - GRID_LEN * CELL_WIDTH + TOP_REGION_HEIGHT) * 0.5;
+        grid.cells[i].y = ((int)(i / GRID_LEN)) * CELL_WIDTH + (WINDOW_HEIGHT - GRID_LEN * CELL_WIDTH + TOP_REGION_HEIGHT) * 0.5;
 
         grid.cells[i].width = CELL_WIDTH;
         grid.cells[i].height = CELL_WIDTH;
