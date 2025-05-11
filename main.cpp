@@ -1,4 +1,4 @@
-#include "common.h"
+#include "common.h" // IWYU pragma: keep
 
 #include "constants.h"
 
@@ -6,9 +6,9 @@ typedef struct Grid
 {
     std::vector<Rectangle> cells;
     std::vector<Color> colors;
-    std::vector<u32> neighbours;
+    std::vector<int> neighbours;
     std::vector<bool> lives;
-    u32 generation_count;
+    int generation_count;
 
     Grid() : cells(GRID_SIZE), colors(GRID_SIZE, COLOR_OFF), neighbours(GRID_SIZE, 0), lives(GRID_SIZE, false), generation_count(0)
     {
