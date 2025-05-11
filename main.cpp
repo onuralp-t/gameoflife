@@ -2,83 +2,90 @@
 
 #include "constants.h"
 
+typedef struct cellstate
+{
+    Rectangle rect; // 4 floats, 4*4 == 16 bytes
+    Color color; // 4 u8's == 4 bytes
+    u8 neighbours;
+    bool alive;
+}cellstate;
+
 typedef struct Grid
 {
-    std::vector<Rectangle> cells;
-    std::vector<Color> colors;
-    std::vector<int> neighbours;
-    std::vector<bool> lives;
-    int generation_count;
+    std::vector<cellstate> cells;
 
-    Grid() : cells(GRID_SIZE), colors(GRID_SIZE, COLOR_OFF), neighbours(GRID_SIZE, 0), lives(GRID_SIZE, false), generation_count(0)
+    u64 generation_count;
+
+    Grid() : generation_count(0), cells(GRID_SIZE)
     {
         for (int i = 0; i < GRID_SIZE; ++i)
         {
-            cells[i].x = (i % GRID_LEN) * CELL_WIDTH + (WINDOW_WIDTH - GRID_LEN * CELL_WIDTH) * 0.5;
-            cells[i].y = ((int)(i / GRID_LEN)) * CELL_WIDTH + (WINDOW_HEIGHT - GRID_LEN * CELL_WIDTH + TOP_REGION_HEIGHT) * 0.5;
+            cells[i].rect.x = (i % GRID_LEN) * CELL_WIDTH + (WINDOW_WIDTH - GRID_LEN * CELL_WIDTH) * 0.5;
+            cells[i].rect.y = ((int)(i / GRID_LEN)) * CELL_WIDTH + (WINDOW_HEIGHT - GRID_LEN * CELL_WIDTH + TOP_REGION_HEIGHT) * 0.5;
 
-            cells[i].width = CELL_WIDTH;
-            cells[i].height = CELL_WIDTH;
+            cells[i].rect.width = CELL_WIDTH;
+            cells[i].rect.height = CELL_WIDTH;
+            cells[i].color = COLOR_OFF;
         }
     }
 
 } Grid;
 
-void draw(Grid &grid)
+void draw(Grid &g)
 {
     for (int i = 0; i < GRID_SIZE; ++i)
     {
-        DrawRectangleRec(grid.cells[i], grid.colors[i]);
-        DrawRectangleLines(grid.cells[i].x, grid.cells[i].y, grid.cells[i].width, grid.cells[i].width, COLOR_BORDER);
+        DrawRectangleRec(g.cells[i].rect, g.cells[i].color);
+        DrawRectangleLines(g.cells[i].rect.x, g.cells[i].rect.y, g.cells[i].rect.width, g.cells[i].rect.width, COLOR_BORDER);
     }
 }
 
-void reset(Grid &grid)
+void reset(Grid &g)
 {
-    grid.generation_count = 0;
+    g.generation_count = 0;
 
     for (int i = 0; i < GRID_SIZE; ++i)
     {
-        grid.cells[i].x = (i % GRID_LEN) * CELL_WIDTH + (WINDOW_WIDTH - GRID_LEN * CELL_WIDTH) * 0.5;
-        grid.cells[i].y = ((int)(i / GRID_LEN)) * CELL_WIDTH + (WINDOW_HEIGHT - GRID_LEN * CELL_WIDTH + TOP_REGION_HEIGHT) * 0.5;
+        g.cells[i].rect.x = (i % GRID_LEN) * CELL_WIDTH + (WINDOW_WIDTH - GRID_LEN * CELL_WIDTH) * 0.5;
+        g.cells[i].rect.y = ((int)(i / GRID_LEN)) * CELL_WIDTH + (WINDOW_HEIGHT - GRID_LEN * CELL_WIDTH + TOP_REGION_HEIGHT) * 0.5;
 
-        grid.cells[i].width = CELL_WIDTH;
-        grid.cells[i].height = CELL_WIDTH;
+        g.cells[i].rect.width = CELL_WIDTH;
+        g.cells[i].rect.height = CELL_WIDTH;
 
-        grid.colors[i] = COLOR_OFF;
-        grid.lives[i] = false;
-        grid.neighbours[i] = 0;
+        g.cells[i].color = COLOR_OFF;
+        g.cells[i].alive = false;
+        g.cells[i].neighbours = 0;
 
     }
 }
 
-int get_idx(Grid &grid, Vector2 mousepos)
+int get_idx(Grid &g, Vector2 mousepos)
 {
-    bool mouse_within_grid_x = mousepos.x > grid.cells[0].x && (mousepos.x < (grid.cells[GRID_LEN - 1].x + CELL_WIDTH));
-    bool mouse_within_grid_y = mousepos.y > grid.cells[0].y && (mousepos.y < (grid.cells[GRID_SIZE - GRID_LEN].y + CELL_WIDTH));
+    bool mouse_within_g_x = mousepos.x > g.cells[0].rect.x && (mousepos.x < (g.cells[GRID_LEN - 1].rect.x + CELL_WIDTH));
+    bool mouse_within_g_y = mousepos.y > g.cells[0].rect.y && (mousepos.y < (g.cells[GRID_SIZE - GRID_LEN].rect.y + CELL_WIDTH));
 
-    if (mouse_within_grid_x && mouse_within_grid_y)
+    if (mouse_within_g_x && mouse_within_g_y)
     {
-        int col = (mousepos.x - grid.cells[0].x) / CELL_WIDTH;
-        int row = (mousepos.y - grid.cells[0].y) / CELL_WIDTH;
+        int col = (mousepos.x - g.cells[0].rect.x) / CELL_WIDTH;
+        int row = (mousepos.y - g.cells[0].rect.y) / CELL_WIDTH;
         return (row * GRID_LEN + col);
     }
     return -1;
 }
 
-void turn_cell_on(Grid &grid, int idx)
+void turn_cell_on(Grid &g, int idx)
 {
-    grid.lives[idx] = true;
-    grid.colors[idx] = COLOR_ON;
+    g.cells[idx].alive = true;
+    g.cells[idx].color = COLOR_ON;
 }
 
-void turn_cell_off(Grid &grid, int idx)
+void turn_cell_off(Grid &g, int idx)
 {
-    grid.lives[idx] = false;
-    grid.colors[idx] = COLOR_OFF;
+    g.cells[idx].alive = false;
+    g.cells[idx].color = COLOR_OFF;
 }
 
-void update_neighbours(Grid &grid)
+void update_neighbours(Grid &g)
 {
     auto is_alive = [&](int idx)
     {
@@ -88,7 +95,7 @@ void update_neighbours(Grid &grid)
         }
         else
         {
-            bool boing = grid.lives[idx];
+            bool boing = g.cells[idx].alive;
             return boing;
         }
     };
@@ -106,100 +113,100 @@ void update_neighbours(Grid &grid)
         if (is_alive(i+GRID_LEN))    {++neighbour_count;}
         if (is_alive(i+GRID_LEN+1))  {++neighbour_count;}
 
-        grid.neighbours[i] = neighbour_count;
+        g.cells[i].neighbours = neighbour_count;
     }
 }
 
-void put_glider_on_idx(Grid &grid, int idx)
+void put_glider_on_idx(Grid &g, int idx)
 {
-    turn_cell_off(grid, idx);
-    turn_cell_off(grid, idx+1);
-    turn_cell_off(grid, idx+2);
-    turn_cell_off(grid, idx+GRID_LEN);
-    turn_cell_off(grid, idx+GRID_LEN+1);
-    turn_cell_off(grid, idx+GRID_LEN+2);
-    turn_cell_off(grid, idx+2*GRID_LEN);
-    turn_cell_off(grid, idx+2*GRID_LEN+1);
-    turn_cell_off(grid, idx+2*GRID_LEN+2);
+    turn_cell_off(g, idx);
+    turn_cell_off(g, idx+1);
+    turn_cell_off(g, idx+2);
+    turn_cell_off(g, idx+GRID_LEN);
+    turn_cell_off(g, idx+GRID_LEN+1);
+    turn_cell_off(g, idx+GRID_LEN+2);
+    turn_cell_off(g, idx+2*GRID_LEN);
+    turn_cell_off(g, idx+2*GRID_LEN+1);
+    turn_cell_off(g, idx+2*GRID_LEN+2);
 
-    turn_cell_on(grid, idx);
-/*         turn_cell_on(grid, idx+1); */
-    turn_cell_on(grid, idx+2);
-/*         turn_cell_on(grid, idx+GRID_LEN); */
-    turn_cell_on(grid, idx+GRID_LEN+1);
-    turn_cell_on(grid, idx+GRID_LEN+2);
-/*         turn_cell_on(grid, idx+2*GRID_LEN); */
-    turn_cell_on(grid, idx+2*GRID_LEN+1);
-/*         turn_cell_on(grid, idx+2*GRID_LEN+2); */
+    turn_cell_on(g, idx);
+/*         turn_cell_on(g, idx+1); */
+    turn_cell_on(g, idx+2);
+/*         turn_cell_on(g, idx+GRID_LEN); */
+    turn_cell_on(g, idx+GRID_LEN+1);
+    turn_cell_on(g, idx+GRID_LEN+2);
+/*         turn_cell_on(g, idx+2*GRID_LEN); */
+    turn_cell_on(g, idx+2*GRID_LEN+1);
+/*         turn_cell_on(g, idx+2*GRID_LEN+2); */
 }
 
-void otuzbir(Grid &grid, int idx)
+void otuzbir(Grid &g, int idx)
 {
-    turn_cell_on(grid, idx + 7);
-    turn_cell_on(grid, idx + 8);
-    turn_cell_on(grid, idx + 10);
+    turn_cell_on(g, idx + 7);
+    turn_cell_on(g, idx + 8);
+    turn_cell_on(g, idx + 10);
 
-    turn_cell_on(grid, idx + 13);
-    turn_cell_on(grid, idx + 15);
-    turn_cell_on(grid, idx + 16);
+    turn_cell_on(g, idx + 13);
+    turn_cell_on(g, idx + 15);
+    turn_cell_on(g, idx + 16);
 
-    turn_cell_on(grid, idx + GRID_LEN);
-    turn_cell_on(grid, idx + GRID_LEN + 1);
-    turn_cell_on(grid, idx + GRID_LEN + 6);
-    turn_cell_on(grid, idx + GRID_LEN + 9);
+    turn_cell_on(g, idx + GRID_LEN);
+    turn_cell_on(g, idx + GRID_LEN + 1);
+    turn_cell_on(g, idx + GRID_LEN + 6);
+    turn_cell_on(g, idx + GRID_LEN + 9);
 
-    turn_cell_on(grid, idx + GRID_LEN + 14);
-    turn_cell_on(grid, idx + GRID_LEN + 17);
-    turn_cell_on(grid, idx + GRID_LEN + 22);
-    turn_cell_on(grid, idx + GRID_LEN + 23);
+    turn_cell_on(g, idx + GRID_LEN + 14);
+    turn_cell_on(g, idx + GRID_LEN + 17);
+    turn_cell_on(g, idx + GRID_LEN + 22);
+    turn_cell_on(g, idx + GRID_LEN + 23);
 
 
-    turn_cell_on(grid, idx + 2*GRID_LEN);
-    turn_cell_on(grid, idx + 2*GRID_LEN + 1);
-    turn_cell_on(grid, idx + 2*GRID_LEN + 7);
-    turn_cell_on(grid, idx + 2*GRID_LEN + 9);
+    turn_cell_on(g, idx + 2*GRID_LEN);
+    turn_cell_on(g, idx + 2*GRID_LEN + 1);
+    turn_cell_on(g, idx + 2*GRID_LEN + 7);
+    turn_cell_on(g, idx + 2*GRID_LEN + 9);
 
-    turn_cell_on(grid, idx + 2*GRID_LEN + 14);
-    turn_cell_on(grid, idx + 2*GRID_LEN + 16);
-    turn_cell_on(grid, idx + 2*GRID_LEN + 22);
-    turn_cell_on(grid, idx + 2*GRID_LEN + 23);
+    turn_cell_on(g, idx + 2*GRID_LEN + 14);
+    turn_cell_on(g, idx + 2*GRID_LEN + 16);
+    turn_cell_on(g, idx + 2*GRID_LEN + 22);
+    turn_cell_on(g, idx + 2*GRID_LEN + 23);
 
-    turn_cell_on(grid, idx + 3*GRID_LEN + 8);
-    turn_cell_on(grid, idx + 3*GRID_LEN + 15);
+    turn_cell_on(g, idx + 3*GRID_LEN + 8);
+    turn_cell_on(g, idx + 3*GRID_LEN + 15);
 
-    turn_cell_on(grid, idx + 9*GRID_LEN + 8);
-    turn_cell_on(grid, idx + 9*GRID_LEN + 15);
+    turn_cell_on(g, idx + 9*GRID_LEN + 8);
+    turn_cell_on(g, idx + 9*GRID_LEN + 15);
 
-    turn_cell_on(grid, idx + 10*GRID_LEN);
-    turn_cell_on(grid, idx + 10*GRID_LEN + 1);
-    turn_cell_on(grid, idx + 10*GRID_LEN + 7);
-    turn_cell_on(grid, idx + 10*GRID_LEN + 9);
+    turn_cell_on(g, idx + 10*GRID_LEN);
+    turn_cell_on(g, idx + 10*GRID_LEN + 1);
+    turn_cell_on(g, idx + 10*GRID_LEN + 7);
+    turn_cell_on(g, idx + 10*GRID_LEN + 9);
 
-    turn_cell_on(grid, idx + 10*GRID_LEN + 14);
-    turn_cell_on(grid, idx + 10*GRID_LEN + 16);
-    turn_cell_on(grid, idx + 10*GRID_LEN + 22);
-    turn_cell_on(grid, idx + 10*GRID_LEN + 23);
+    turn_cell_on(g, idx + 10*GRID_LEN + 14);
+    turn_cell_on(g, idx + 10*GRID_LEN + 16);
+    turn_cell_on(g, idx + 10*GRID_LEN + 22);
+    turn_cell_on(g, idx + 10*GRID_LEN + 23);
 
-    turn_cell_on(grid, idx + 11*GRID_LEN);
-    turn_cell_on(grid, idx + 11*GRID_LEN + 1);
-    turn_cell_on(grid, idx + 11*GRID_LEN + 6);
-    turn_cell_on(grid, idx + 11*GRID_LEN + 9);
+    turn_cell_on(g, idx + 11*GRID_LEN);
+    turn_cell_on(g, idx + 11*GRID_LEN + 1);
+    turn_cell_on(g, idx + 11*GRID_LEN + 6);
+    turn_cell_on(g, idx + 11*GRID_LEN + 9);
 
-    turn_cell_on(grid, idx + 11*GRID_LEN + 14);
-    turn_cell_on(grid, idx + 11*GRID_LEN + 17);
-    turn_cell_on(grid, idx + 11*GRID_LEN + 22);
-    turn_cell_on(grid, idx + 11*GRID_LEN + 23);
+    turn_cell_on(g, idx + 11*GRID_LEN + 14);
+    turn_cell_on(g, idx + 11*GRID_LEN + 17);
+    turn_cell_on(g, idx + 11*GRID_LEN + 22);
+    turn_cell_on(g, idx + 11*GRID_LEN + 23);
 
-    turn_cell_on(grid, idx + 12*GRID_LEN + 7);
-    turn_cell_on(grid, idx + 12*GRID_LEN + 8);
-    turn_cell_on(grid, idx + 12*GRID_LEN + 10);
+    turn_cell_on(g, idx + 12*GRID_LEN + 7);
+    turn_cell_on(g, idx + 12*GRID_LEN + 8);
+    turn_cell_on(g, idx + 12*GRID_LEN + 10);
 
-    turn_cell_on(grid, idx + 12*GRID_LEN + 13);
-    turn_cell_on(grid, idx + 12*GRID_LEN + 15);
-    turn_cell_on(grid, idx + 12*GRID_LEN + 16);
+    turn_cell_on(g, idx + 12*GRID_LEN + 13);
+    turn_cell_on(g, idx + 12*GRID_LEN + 15);
+    turn_cell_on(g, idx + 12*GRID_LEN + 16);
 }
 
-void update_neighbours_wraparound_360(Grid &grid)
+void update_neighbours_wraparound_360(Grid &g)
 {
     auto is_alive = [&](int idx)
     {
@@ -209,7 +216,7 @@ void update_neighbours_wraparound_360(Grid &grid)
         }
         else
         {
-            bool boing = grid.lives[idx];
+            bool boing = g.cells[idx].alive;
             return boing;
         }
     };
@@ -294,61 +301,61 @@ void update_neighbours_wraparound_360(Grid &grid)
         printf("somehow reached default\n");
         break;
         }
-        grid.neighbours[i] = neighbour_count;
+        g.cells[i].neighbours = neighbour_count;
     }
 }
 
-void conway_tick(Grid &grid)
+void conway_tick(Grid &g)
 {
 /*         update_neighbours(); */
-    update_neighbours_wraparound_360(grid);
+    update_neighbours_wraparound_360(g);
 
     for (int i=0; i<GRID_SIZE; ++i)
     {
-        if (grid.lives[i])
+        if (g.cells[i].alive)
         {
-            if (grid.neighbours[i] < 2 || grid.neighbours[i] > 3) {turn_cell_off(grid, i);}
+            if (g.cells[i].neighbours < 2 || g.cells[i].neighbours > 3) {turn_cell_off(g, i);}
         }
         else
         {
-            if (grid.neighbours[i] == 3) {turn_cell_on(grid, i);}
+            if (g.cells[i].neighbours == 3) {turn_cell_on(g, i);}
         }
     }
-    grid.generation_count++;
+    g.generation_count++;
 }
 
 int main(void)
 {
-    Grid grid;
+    Grid g;
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "window!");
     SetTargetFPS(60);
 
     while (!WindowShouldClose())
     {
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {turn_cell_on(grid, get_idx(grid, GetMousePosition()));}
-        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){turn_cell_off(grid, get_idx(grid, GetMousePosition()));}
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {turn_cell_on(g, get_idx(g, GetMousePosition()));}
+        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){turn_cell_off(g, get_idx(g, GetMousePosition()));}
 
-        if (IsKeyPressed(KEY_ENTER)) {conway_tick(grid);}
-        if (IsKeyDown(KEY_SPACE)) {conway_tick(grid);}
+        if (IsKeyPressed(KEY_ENTER)) {conway_tick(g);}
+        if (IsKeyDown(KEY_SPACE)) {conway_tick(g);}
 
-        if (IsKeyPressed(KEY_R)) {reset(grid);}
+        if (IsKeyPressed(KEY_R)) {reset(g);}
 
-        if (IsKeyPressed(KEY_G)) {put_glider_on_idx(grid, get_idx(grid, GetMousePosition()));}
+        if (IsKeyPressed(KEY_G)) {put_glider_on_idx(g, get_idx(g, GetMousePosition()));}
 
         if (IsKeyPressed(KEY_B))
         {
-            otuzbir(grid, get_idx(grid, GetMousePosition()));
+            otuzbir(g, get_idx(g, GetMousePosition()));
         }
 
-        std::string idx = "idx=" + std::to_string(get_idx(grid, GetMousePosition()));
-        std::string generation = "gen=" + std::to_string(grid.generation_count);
+        std::string idx = "idx=" + std::to_string(get_idx(g, GetMousePosition()));
+        std::string generation = "gen=" + std::to_string(g.generation_count);
 
         BeginDrawing();
 
             ClearBackground(COLOR_BACKGROUND);
             
-            draw(grid);
+            draw(g);
             DrawText(idx.c_str(), 50, 15, 20, DARKGRAY);
 
             DrawText(generation.c_str(), 200, 15, 20, DARKGRAY);
