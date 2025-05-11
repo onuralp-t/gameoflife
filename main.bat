@@ -8,6 +8,8 @@ set after_flags=-L"%RAYLIB%" -l:libraylib.a -lgdi32 -lwinmm
 
 set after_flags_nocmd=-L"%RAYLIB%" -l:libraylib.a -lgdi32 -lwinmm -Wl,--subsystem,windows
 
+set opengl_mightbenecessary_atsomepoint=-L"%RAYLIB%" -l:libraylib.a -lgdi32 -lwinmm -lopengl32 -Wl,--subsystem,windows
+
 @echo on
 g++ %before_flags% -o main.exe main.cpp %after_flags_nocmd%
 
