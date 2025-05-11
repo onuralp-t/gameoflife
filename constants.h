@@ -5,9 +5,7 @@
 #include "raylib.h"
 #endif
 
-#ifndef comptime
 #define comptime static constexpr
-#endif
 
 comptime int GRID_LEN = 50;
 comptime float CELL_WIDTH = 15.0f;
