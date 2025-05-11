@@ -25,7 +25,10 @@ typedef struct Grid
 
             cells[i].rect.width = CELL_WIDTH;
             cells[i].rect.height = CELL_WIDTH;
+            
             cells[i].color = COLOR_OFF;
+            cells[i].neighbours = 0;
+            cells[i].alive = false;
         }
     }
 
@@ -53,8 +56,8 @@ void reset(Grid &grid)
         grid.cells[i].rect.height = CELL_WIDTH;
 
         grid.cells[i].color = COLOR_OFF;
-        grid.cells[i].alive = false;
         grid.cells[i].neighbours = 0;
+        grid.cells[i].alive = false;
 
     }
 }
