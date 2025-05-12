@@ -143,7 +143,7 @@ void put_glider_on_idx(Grid &grid, int idx)
 /*         turn_cell_on(grid, idx+2*GRID_LEN+2); */
 }
 
-void otuzbir(Grid &grid, int idx)
+void period_31(Grid &grid, int idx)
 {
     turn_cell_on(grid, idx + 7);
     turn_cell_on(grid, idx + 8);
@@ -332,15 +332,15 @@ int main(void)
     Grid grid;
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "window!");
-    SetTargetFPS(60);
+    SetTargetFPS(0);
 
     while (!WindowShouldClose())
     {
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {turn_cell_on(grid, get_idx(grid, GetMousePosition()));}
-        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){turn_cell_off(grid, get_idx(grid, GetMousePosition()));}
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))   {turn_cell_on(grid, get_idx(grid, GetMousePosition()));}
+        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {turn_cell_off(grid, get_idx(grid, GetMousePosition()));}
 
         if (IsKeyPressed(KEY_ENTER)) {conway_tick(grid);}
-        if (IsKeyDown(KEY_SPACE)) {conway_tick(grid);}
+        if (IsKeyDown(KEY_SPACE))    {conway_tick(grid);}
 
         if (IsKeyPressed(KEY_R)) {reset(grid);}
 
@@ -348,26 +348,30 @@ int main(void)
 
         if (IsKeyPressed(KEY_B))
         {
-            otuzbir(grid, get_idx(grid, GetMousePosition()));
+            period_31(grid, get_idx(grid, GetMousePosition()));
         }
 
-        std::string idx = "idx=" + std::to_string(get_idx(grid, GetMousePosition()));
-        std::string generation = "gen=" + std::to_string(grid.generation_count);
+        std::string idx           = "idx=" + std::to_string(get_idx(grid, GetMousePosition()));
+        std::string generation    = "gen=" + std::to_string(grid.generation_count);
+        std::string instructions  = "LMB: draw, RMB: erase, ENTER: single_step, SPACE: fastforward";
+        std::string instructions2 = "r: reset, g: glide, b: period_31";
 
         BeginDrawing();
 
             ClearBackground(COLOR_BACKGROUND);
             
             draw(grid);
-            DrawText(idx.c_str(), 50, 15, 20, DARKGRAY);
 
-            DrawText(generation.c_str(), 200, 15, 20, DARKGRAY);
+            DrawText(idx.c_str(),         50, 15, FONTSIZE, DARKGRAY);
+            DrawText(generation.c_str(), 200, 15, FONTSIZE, DARKGRAY);
 
-            const char* instructions = "LMB: draw, RMB: erase, ENTER: single_step, SPACE: fastforward";
-            DrawText(instructions, WINDOW_WIDTH*0.5 - MeasureText(instructions, 20)*0.5, 45, 20, DARKGRAY);
+            int inst1x = (WINDOW_WIDTH - MeasureText(instructions.c_str(),  FONTSIZE)) * 0.5;
+            int inst2x = (WINDOW_WIDTH - MeasureText(instructions2.c_str(), FONTSIZE)) * 0.5;
 
-            const char* instructions2 = "r: reset, g: glide, b: 31";
-            DrawText(instructions2, WINDOW_WIDTH*0.5 - MeasureText(instructions2, 20)*0.5, 70, 20, DARKGRAY);
+            DrawText(instructions.c_str(),  inst1x, 45, FONTSIZE, DARKGRAY);
+            DrawText(instructions2.c_str(), inst2x, 75, FONTSIZE, DARKGRAY);
+
+            DrawFPS(WINDOW_WIDTH-85, 75);
 
         EndDrawing();
     }
