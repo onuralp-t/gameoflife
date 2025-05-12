@@ -11,6 +11,6 @@ set after_flags_nocmd=-L"%RAYLIB%" -l:libraylib.a -lgdi32 -lwinmm -Wl,--subsyste
 set opengl_mightbenecessary_atsomepoint=-L"%RAYLIB%" -l:libraylib.a -lgdi32 -lwinmm -lopengl32 -Wl,--subsystem,windows
 
 @echo on
-g++ %before_flags% gameoflife.cpp assets/icon.res -o gameoflife.exe %after_flags%
+g++ %before_flags% gameoflife.cpp assets/icon.res -o gameoflife.exe %after_flags_nocmd%
 
 .\gameoflife.exe
