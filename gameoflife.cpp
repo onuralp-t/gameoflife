@@ -294,7 +294,7 @@ void update_neighbours_wraparound_360(Grid &grid)
         break;
 
         default:
-        printf("somehow reached default\n");
+        printf("somehow reached default/n");
         break;
 
         }
@@ -326,6 +326,22 @@ int main(void)
     Grid grid;
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "goool");
+
+    Image windowIconOriginal = LoadImage("assets/icon.png");
+
+    if (windowIconOriginal.data != NULL) {
+        // Check if the format is already R8G8B8A8, if not, convert it
+        if (windowIconOriginal.format != PIXELFORMAT_UNCOMPRESSED_R8G8B8A8)
+        {
+            ImageFormat(&windowIconOriginal, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+            TraceLog(LOG_INFO, "RUNTIME ICON: Converted window icon to R8G8B8A8 format.");
+        }
+        SetWindowIcon(windowIconOriginal); // SetWindowIcon expects the Image by value
+        UnloadImage(windowIconOriginal);   // Unload the original (or converted) image data
+    } else {
+        TraceLog(LOG_WARNING, "RUNTIME ICON: Failed to load window icon from PNG.");
+    }
+
     SetTargetFPS(0);
 
     while (!WindowShouldClose())
