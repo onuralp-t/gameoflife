@@ -5,10 +5,10 @@
 typedef struct cellstate
 {
     Rectangle rect; // 4 floats, 4*4 == 16 bytes
-    Color color; // 4 u8's == 4 bytes
+    Color color;    // 4 u8's == 4 bytes
     u8 neighbours;
     bool alive;
-}cellstate;
+} cellstate;
 
 typedef struct Grid
 {
@@ -58,7 +58,6 @@ void reset(Grid &grid)
         grid.cells[i].color = COLOR_OFF;
         grid.cells[i].neighbours = 0;
         grid.cells[i].alive = false;
-
     }
 }
 
@@ -73,6 +72,7 @@ int get_idx(Grid &grid, Vector2 mousepos)
         int row = (mousepos.y - grid.cells[0].rect.y) / CELL_WIDTH;
         return (row * GRID_LEN + col);
     }
+
     return -1;
 }
 
@@ -92,12 +92,9 @@ void update_neighbours(Grid &grid)
 {
     auto is_alive = [&](int idx)
     {
-        if (idx < 0 || idx > GRID_SIZE - 1)
-        {
+        if (idx < 0 || (idx > (GRID_SIZE - 1))) {
             return false;
-        }
-        else
-        {
+        } else {
             bool boing = grid.cells[idx].alive;
             return boing;
         }
@@ -163,7 +160,6 @@ void period_31(Grid &grid, int idx)
     turn_cell_on(grid, idx + GRID_LEN + 22);
     turn_cell_on(grid, idx + GRID_LEN + 23);
 
-
     turn_cell_on(grid, idx + 2*GRID_LEN);
     turn_cell_on(grid, idx + 2*GRID_LEN + 1);
     turn_cell_on(grid, idx + 2*GRID_LEN + 7);
@@ -213,14 +209,10 @@ void update_neighbours_wraparound_360(Grid &grid)
 {
     auto is_alive = [&](int idx)
     {
-        if (idx < 0 || idx > GRID_SIZE - 1)
-        {
+        if (idx < 0 || (idx > (GRID_SIZE - 1))) {
             return false;
-        }
-        else
-        {
-            bool boing = grid.cells[idx].alive;
-            return boing;
+        } else {
+            return grid.cells[idx].alive;
         }
     };
 
@@ -300,9 +292,11 @@ void update_neighbours_wraparound_360(Grid &grid)
         if (is_alive(i+GRID_LEN))    {++neighbour_count;}
         if (is_alive(i+GRID_LEN+1))  {++neighbour_count;}
         break;
+
         default:
         printf("somehow reached default\n");
         break;
+
         }
         grid.cells[i].neighbours = neighbour_count;
     }
@@ -310,7 +304,7 @@ void update_neighbours_wraparound_360(Grid &grid)
 
 void conway_tick(Grid &grid)
 {
-/*         update_neighbours(); */
+    /* update_neighbours(grid); */
     update_neighbours_wraparound_360(grid);
 
     for (int i=0; i<GRID_SIZE; ++i)
@@ -331,7 +325,7 @@ int main(void)
 {
     Grid grid;
 
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "window!");
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "goool");
     SetTargetFPS(0);
 
     while (!WindowShouldClose())
